@@ -21,6 +21,7 @@ import de.metadocks.lambdaui.swt.SwtUI;
 import de.metadocks.lambdaui.swt.ViewerUI;
 
 public class HelloWorld {
+	private Text text;
 
 	public void createUIConventional(Composite parent) {
 		parent.setLayout(GridLayoutFactory.swtDefaults().numColumns(3).create());
@@ -58,7 +59,6 @@ public class HelloWorld {
 	}
 
 	private SwtUI<Composite> root;
-	private Text text;
 
 	public void createUI(Composite parent) {
 		root = SwtUI.wrap(parent);
