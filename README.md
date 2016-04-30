@@ -58,3 +58,7 @@ With lambda support:
 		ComboViewer viewer = root.findViewer("selectionCombo");
 		tf.setText("Selection: " + viewer.getCombo().getText());
 	}
+	
+Both samples produce the following same output:
+
+![Outpu](https://raw.githubusercontent.com/erdalkaraca/lambda-ui/master/screenshots/hellow-world.png "Output") 
