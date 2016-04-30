@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2016 Erdal Karaca.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Erdal Karaca - initial API and implementation
+ *******************************************************************************/
 package de.metadocks.lambdaui.swt;
 
 import java.util.function.BiFunction;
@@ -10,13 +20,18 @@ import org.eclipse.jface.databinding.swt.IWidgetValueProperty;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 
 public abstract class SwtUI<T extends Control> {
 
-	private static String ID = "id";
+	protected static final String VIEWER = "viewer";
+	protected static String ID = "id";
 
 	// no need to be thread-safe as UI is always constructed within the UI
 	// thread
@@ -26,6 +41,11 @@ public abstract class SwtUI<T extends Control> {
 
 	public SwtUI<T> id(String id) {
 		control().setData(ID, id);
+		return this;
+	}
+
+	public SwtUI<T> text(String text) {
+		WidgetProperties.text().setValue(control(), text);
 		return this;
 	}
 
@@ -73,6 +93,59 @@ public abstract class SwtUI<T extends Control> {
 		return this;
 	}
 
+	public SwtUI<T> on(int swtEvent, Listener listener) {
+		control().addListener(swtEvent, listener);
+		return this;
+	}
+
+	public <C extends Control> SwtUI<T> withChild(String id, Consumer<C> consumer) {
+		C found = find(id, control());
+
+		if (found == null) {
+			throw new IllegalArgumentException("Control not found: " + id);
+		}
+
+		consumer.accept(found);
+		return this;
+	}
+
+	public <C extends Control> C find(String id) {
+		return find(id, control());
+	}
+
+	@SuppressWarnings("unchecked")
+	private <C extends Control> C find(String id, T context) {
+		String contextId = (String) context.getData(ID);
+
+		if (id.equals(contextId)) {
+			return (C) context;
+		}
+
+		if (context instanceof Composite) {
+			for (Control c : ((Composite) context).getChildren()) {
+				Control found = find(id, (T) c);
+
+				if (found != null) {
+					return (C) found;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <V extends Viewer> V findViewer(String id) {
+		Control control = control();
+		Control found = find(id, (T) control);
+
+		if (found.getData(VIEWER) instanceof Viewer) {
+			return (V) found.getData(VIEWER);
+		}
+
+		return null;
+	}
+
 	public static <T extends Control> SwtUI<T> create(BiFunction<Composite, Integer, T> ctor) {
 		return create(ctor, SWT.None);
 	}
@@ -117,5 +190,19 @@ public abstract class SwtUI<T extends Control> {
 
 	public static interface ControlSupplier {
 		SwtUI<? extends Control> getControlUI();
+	}
+
+	public static void openInShell(Consumer<SwtUI<Shell>> uiConsumer) {
+		Display display = new Display();
+		Shell shell = new Shell(display);
+		shell.setLayout(new FillLayout());
+		uiConsumer.accept(SwtUI.wrap(shell));
+		shell.open();
+		shell.layout();
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch())
+				display.sleep();
+		}
+		display.dispose();
 	}
 }

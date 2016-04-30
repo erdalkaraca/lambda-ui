@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Lambda UIs Snippets
+Bundle-SymbolicName: de.metadocks.lambdaui.snippets
+Bundle-Version: 0.9.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: Erdal Karaca
+Require-Bundle: de.metadocks.lambdaui;bundle-version="0.9.0",
+ org.eclipse.swt,
+ org.eclipse.jface.databinding,
+ org.eclipse.jface

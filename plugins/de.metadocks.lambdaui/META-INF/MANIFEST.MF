@@ -10,3 +10,5 @@ Require-Bundle: org.eclipse.swt,
  org.eclipse.core.databinding.property,
  org.eclipse.core.databinding.observable
 Export-Package: de.metadocks.lambdaui.swt
+Bundle-ActivationPolicy: lazy
+Import-Package: org.eclipse.core.runtime
