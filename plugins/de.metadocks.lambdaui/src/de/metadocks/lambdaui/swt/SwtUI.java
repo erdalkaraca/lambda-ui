@@ -105,7 +105,43 @@ public abstract class SwtUI<T extends Control> {
 			throw new IllegalArgumentException("Control not found: " + id);
 		}
 
-		consumer.accept(found);
+		syncExec(() -> consumer.accept(found));
+		return this;
+	}
+
+	public SwtUI<T> syncExec(Runnable code) {
+		T control = control();
+
+		if (Thread.currentThread() != control.getDisplay().getThread()) {
+			control.getDisplay().syncExec(code);
+		} else {
+			code.run();
+		}
+
+		return this;
+	}
+
+	public SwtUI<T> asyncExec(Runnable code) {
+		T control = control();
+
+		control.getDisplay().asyncExec(() -> {
+			if (!control.isDisposed()) {
+				code.run();
+			}
+		});
+
+		return this;
+	}
+
+	public SwtUI<T> timerExec(int delay, Runnable code) {
+		T control = control();
+
+		control.getDisplay().timerExec(delay, () -> {
+			if (!control.isDisposed()) {
+				code.run();
+			}
+		});
+
 		return this;
 	}
 
