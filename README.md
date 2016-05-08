@@ -61,4 +61,29 @@ With lambda support:
 	
 Both samples produce the following same output:
 
-![Outpu](https://raw.githubusercontent.com/erdalkaraca/lambda-ui/master/screenshots/hellow-world.png "Output") 
+![Output](https://raw.githubusercontent.com/erdalkaraca/lambda-ui/master/screenshots/hellow-world.png "Output")
+
+## Databinding
+
+The Eclipse XWT binding expressions are supported:
+
+	public void createUI(SwtUI<Composite> root) {
+		Person person = new Person();
+		person.setFirstName("John");
+		person.setLastName("Doe");
+		root.bindingMaster(person);
+
+		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
+				.child(() -> SwtUI.create(Label::new)//
+						.text("First Name"))//
+				.child(() -> SwtUI.create(Text::new)//
+						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
+						.text("{Binding path=firstName}"))//
+				.child(() -> SwtUI.create(Label::new)//
+						.text("Last Name"))//
+				.child(() -> SwtUI.create(Text::new)//
+						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
+						.text("{Binding path=lastName}")//
+		);
+	}
+	
