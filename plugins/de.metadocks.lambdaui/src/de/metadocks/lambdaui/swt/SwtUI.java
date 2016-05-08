@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016 Erdal Karaca.
+ * Copyright (c) 2016 Erdal Karaca and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,12 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.UpdateValueStrategy;
+import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
-import org.eclipse.jface.databinding.swt.ISWTObservableValue;
+import org.eclipse.core.databinding.observable.value.WritableValue;
+import org.eclipse.jface.databinding.swt.DisplayRealm;
 import org.eclipse.jface.databinding.swt.IWidgetValueProperty;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.viewers.Viewer;
@@ -28,10 +32,17 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
+import de.metadocks.lambdaui.internal.binding.Binding;
+import de.metadocks.lambdaui.internal.expr.ExprEvaluator;
+import de.metadocks.lambdaui.internal.expr.ExprParser;
+import de.metadocks.lambdaui.internal.expr.ExprParser.Element;
+
 public abstract class SwtUI<T extends Control> {
 
-	protected static final String VIEWER = "viewer";
-	protected static String ID = "id";
+	private static final String PREFIX = SwtUI.class.getName();
+	protected static final String VIEWER = PREFIX + ".viewer";
+	private static final String DATA_CONTEXT = PREFIX + ".dataContext";
+	protected static String ID = PREFIX + ".id";
 
 	// no need to be thread-safe as UI is always constructed within the UI
 	// thread
@@ -40,17 +51,77 @@ public abstract class SwtUI<T extends Control> {
 	public abstract T control();
 
 	public SwtUI<T> id(String id) {
-		control().setData(ID, id);
+		tag(ID, id);
 		return this;
+	}
+
+	private <P> void tag(String key, P value) {
+		control().setData(key, value);
+	}
+
+	private <P> void tag(Class<P> key, P value) {
+		tag(key.getName(), value);
+	}
+
+	private <P> P findTagged(Class<P> key) {
+		return findTagged(key, null);
+	}
+
+	private <P> P findTagged(Class<P> key, P defaultValue) {
+		return findTagged(key.getName(), defaultValue);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <P> P findTagged(String key, P defaultValue) {
+		Control ctx = control();
+
+		do {
+			P data = (P) ctx.getData(key);
+			if (data != null) {
+				return data;
+			}
+			ctx = ctx.getParent();
+		} while (ctx != null);
+
+		// check for null default value?
+		tag(key, defaultValue);
+		return defaultValue;
 	}
 
 	public SwtUI<T> text(String text) {
-		WidgetProperties.text().setValue(control(), text);
+		return prop(() -> WidgetProperties.text(), text);
+	}
+
+	public SwtUI<T> text(int event, String text) {
+		return prop(() -> WidgetProperties.text(event), text);
+	}
+
+	public SwtUI<T> prop(Supplier<IWidgetValueProperty> propSupplier, Object value) {
+		// quick check for binding expressions
+		if (value instanceof String && value.toString().matches("^\\s*\\{.*")) {
+			IObservableValue targetObservable = propSupplier.get().observe(control());
+
+			Element root = new ExprParser().parseTree((String) value);
+			Binding binding = ExprEvaluator.getInstance().evaluate(root);
+			Object dataContext = findTagged(DATA_CONTEXT, null);
+			WritableValue wv = new WritableValue();
+			wv.setValue(dataContext);
+			IObservableValue modelObservableValue = binding.observe(wv);
+
+			DataBindingContext dbc = findTagged(DataBindingContext.class);
+			UpdateValueStrategy t2m = new UpdateValueStrategy();
+			UpdateValueStrategy m2t = new UpdateValueStrategy();
+			dbc.bindValue(targetObservable, modelObservableValue, t2m, m2t);
+		} else {
+			// just set the value as-is
+			propSupplier.get().setValue(control(), value);
+		}
+
 		return this;
 	}
 
-	public <V> SwtUI<T> prop(Supplier<IWidgetValueProperty> propSupplier, V value) {
-		propSupplier.get().setValue(control(), value);
+	public SwtUI<T> bindingMaster(Object dataContext) {
+		tag(DATA_CONTEXT, dataContext);
 		return this;
 	}
 
@@ -64,7 +135,7 @@ public abstract class SwtUI<T extends Control> {
 		return this;
 	}
 
-	public <C extends Control> SwtUI<T> child(ControlSupplier supplier) {
+	public SwtUI<T> child(ControlSupplier supplier) {
 		currentParent = control();
 		supplier.getControlUI();
 		return this;
@@ -81,17 +152,19 @@ public abstract class SwtUI<T extends Control> {
 		return this;
 	}
 
-	public SwtUI<T> observeText(int event, Consumer<IObservableValue> obsConsumer) {
-		IWidgetValueProperty prop = WidgetProperties.text(event);
-		return observeValue(() -> prop, obsConsumer);
-	}
-
-	public SwtUI<T> observeValue(Supplier<IWidgetValueProperty> propSupplier, Consumer<IObservableValue> obsConsumer) {
-		IWidgetValueProperty prop = propSupplier.get();
-		ISWTObservableValue observe = prop.observe(control());
-		obsConsumer.accept(observe);
-		return this;
-	}
+	// public SwtUI<T> observeText(int event, Consumer<IObservableValue>
+	// obsConsumer) {
+	// IWidgetValueProperty prop = WidgetProperties.text(event);
+	// return observeValue(() -> prop, obsConsumer);
+	// }
+	//
+	// public SwtUI<T> observeValue(Supplier<IWidgetValueProperty> propSupplier,
+	// Consumer<IObservableValue> obsConsumer) {
+	// IWidgetValueProperty prop = propSupplier.get();
+	// ISWTObservableValue observe = prop.observe(control());
+	// obsConsumer.accept(observe);
+	// return this;
+	// }
 
 	public SwtUI<T> on(int swtEvent, Listener listener) {
 		control().addListener(swtEvent, listener);
@@ -217,6 +290,7 @@ public abstract class SwtUI<T extends Control> {
 				return control;
 			}
 		};
+		builder.findTagged(DataBindingContext.class, new DataBindingContext());
 		return builder;
 	}
 
@@ -232,13 +306,16 @@ public abstract class SwtUI<T extends Control> {
 		Display display = new Display();
 		Shell shell = new Shell(display);
 		shell.setLayout(new FillLayout());
-		uiConsumer.accept(SwtUI.wrap(shell));
-		shell.open();
-		shell.layout();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
-		}
-		display.dispose();
+
+		Realm.runWithDefault(DisplayRealm.getRealm(display), () -> {
+			uiConsumer.accept(SwtUI.wrap(shell));
+			shell.open();
+			shell.layout();
+			while (!shell.isDisposed()) {
+				if (!display.readAndDispatch())
+					display.sleep();
+			}
+			display.dispose();
+		});
 	}
 }
