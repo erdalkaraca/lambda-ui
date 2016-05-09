@@ -23,4 +23,8 @@ public class Bean {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		this.pcs.removePropertyChangeListener(listener);
 	}
+
+	protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+		pcs.firePropertyChange(propertyName, oldValue, newValue);
+	}
 }

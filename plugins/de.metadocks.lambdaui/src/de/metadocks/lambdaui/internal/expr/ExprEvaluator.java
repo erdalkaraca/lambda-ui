@@ -10,9 +10,7 @@
  *******************************************************************************/
 package de.metadocks.lambdaui.internal.expr;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -34,12 +32,19 @@ public class ExprEvaluator {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T evaluate(Node node) {
+	public <T> T evaluate(Node node, Class<T> elementType) {
 		if (node instanceof TextNode) {
 			return (T) ((TextNode) node).value;
 		} else if (node instanceof Element) {
 			Element element = (Element) node;
-			Class<T> type = (Class<T>) typesLookup.get(element.name);
+			Class<T> type;
+
+			if (element.name == null) {
+				type = elementType;
+			} else {
+				type = (Class<T>) typesLookup.get(element.name);
+			}
+
 			T ret;
 
 			try {
@@ -50,9 +55,12 @@ public class ExprEvaluator {
 
 			for (Entry<String, Node> e : element.children.entrySet()) {
 				String propName = e.getKey();
-				Object propValue = evaluate(e.getValue());
-
 				IBeanValueProperty value = BeanProperties.value(ret.getClass(), propName);
+				// derive value type from property type of bean if not provided
+				// in AST
+				Class<?> valueType = (Class<?>) value.getValueType();
+				Object propValue = evaluate(e.getValue(), valueType);
+				propValue = ConvertersRegistry.getInstance().convert(propValue, valueType);
 				value.setValue(ret, propValue);
 			}
 
@@ -60,6 +68,7 @@ public class ExprEvaluator {
 		}
 
 		return null;
+
 	}
 
 	public static ExprEvaluator getInstance() {

@@ -11,6 +11,7 @@
 package de.metadocks.lambdaui.snippets.swt;
 
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -29,14 +30,19 @@ public class BindingExample {
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
 				.child(() -> SwtUI.create(Label::new)//
 						.text("First Name"))//
-				.child(() -> SwtUI.create(Text::new)//
+				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
-						.text("{Binding path=firstName}"))//
+						.text(SWT.Modify, "{Binding path=firstName, delay=200}"))//
 				.child(() -> SwtUI.create(Label::new)//
 						.text("Last Name"))//
-				.child(() -> SwtUI.create(Text::new)//
+				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
-						.text("{Binding path=lastName}")//
+						.text(SWT.Modify, "{path=lastName, delay=200}"))//
+				.child(() -> SwtUI.create(Label::new)//
+						.text("Complete Name"))//
+				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
+						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
+						.text("Name: {path=firstName} {path=lastName}")//
 		);
 	}
 

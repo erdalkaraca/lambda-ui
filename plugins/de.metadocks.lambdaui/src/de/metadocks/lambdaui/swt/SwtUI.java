@@ -10,6 +10,8 @@
  *******************************************************************************/
 package de.metadocks.lambdaui.swt;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -17,6 +19,7 @@ import java.util.function.Supplier;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.observable.Realm;
+import org.eclipse.core.databinding.observable.value.ComputedValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.jface.databinding.swt.DisplayRealm;
@@ -33,9 +36,12 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import de.metadocks.lambdaui.internal.binding.Binding;
+import de.metadocks.lambdaui.internal.expr.ConvertersRegistry;
 import de.metadocks.lambdaui.internal.expr.ExprEvaluator;
 import de.metadocks.lambdaui.internal.expr.ExprParser;
 import de.metadocks.lambdaui.internal.expr.ExprParser.Element;
+import de.metadocks.lambdaui.internal.expr.ExprParser.Node;
+import de.metadocks.lambdaui.internal.expr.ExprParser.TextNode;
 
 public abstract class SwtUI<T extends Control> {
 
@@ -57,10 +63,6 @@ public abstract class SwtUI<T extends Control> {
 
 	private <P> void tag(String key, P value) {
 		control().setData(key, value);
-	}
-
-	private <P> void tag(Class<P> key, P value) {
-		tag(key.getName(), value);
 	}
 
 	private <P> P findTagged(Class<P> key) {
@@ -97,24 +99,80 @@ public abstract class SwtUI<T extends Control> {
 	}
 
 	public SwtUI<T> prop(Supplier<IWidgetValueProperty> propSupplier, Object value) {
-		// quick check for binding expressions
-		if (value instanceof String && value.toString().matches("^\\s*\\{.*")) {
-			IObservableValue targetObservable = propSupplier.get().observe(control());
+		return prop(propSupplier.get(), value);
+	}
 
-			Element root = new ExprParser().parseTree((String) value);
-			Binding binding = ExprEvaluator.getInstance().evaluate(root);
-			Object dataContext = findTagged(DATA_CONTEXT, null);
-			WritableValue wv = new WritableValue();
-			wv.setValue(dataContext);
-			IObservableValue modelObservableValue = binding.observe(wv);
+	public SwtUI<T> prop(IWidgetValueProperty prop, Object value) {
+		List<Node> nodes = new ExprParser().parseTree((String) value);
+		List<Object> obs = new ArrayList<>();
+		int delay = 0;
+		boolean hasObservables = false;
 
+		for (Node node : nodes) {
+			if (node instanceof Element) {
+				Element element = (Element) node;
+				Binding binding = ExprEvaluator.getInstance().evaluate(element, Binding.class);
+				binding.setExpression(element.expr);
+				delay = Math.max(delay, binding.getDelay());
+				Object dataContext = findTagged(DATA_CONTEXT, null);
+				WritableValue wv = new WritableValue();
+				wv.setValue(dataContext);
+				IObservableValue modelObservableValue = binding.observe(wv);
+				obs.add(modelObservableValue);
+				hasObservables = true;
+			} else if (node instanceof TextNode) {
+				obs.add(((TextNode) node).value);
+			}
+		}
+
+		if (hasObservables) {
 			DataBindingContext dbc = findTagged(DataBindingContext.class);
 			UpdateValueStrategy t2m = new UpdateValueStrategy();
 			UpdateValueStrategy m2t = new UpdateValueStrategy();
+			IObservableValue targetObservable = delay > 0 ? prop.observeDelayed(delay, control())
+					: prop.observe(control());
+			IObservableValue modelObservableValue;
+
+			if (obs.size() == 1) {
+				modelObservableValue = (IObservableValue) obs.get(0);
+			} else {
+				// aggregate to string observable by concatenating all values
+				// the value will be automatically updated once one of the
+				// observables change
+				modelObservableValue = new ComputedValue(String.class) {
+
+					@Override
+					protected Object calculate() {
+						StringBuilder sb = new StringBuilder();
+
+						for (Object object : obs) {
+							if (object instanceof String) {
+								sb.append((String) object);
+							} else if (object instanceof IObservableValue) {
+								Object obValue = ((IObservableValue) object).getValue();
+								obValue = ConvertersRegistry.getInstance().convert(obValue, String.class);
+								sb.append((String) obValue);
+							}
+						}
+
+						return sb.toString();
+					}
+				};
+			}
+
 			dbc.bindValue(targetObservable, modelObservableValue, t2m, m2t);
+
+			// set non editable if this was a multi binding
+			if (obs.size() > 1) {
+				try {
+					WidgetProperties.editable().setValue(control(), false);
+				} catch (Exception e) {
+					// ignore, not a supported editable widget
+				}
+			}
 		} else {
-			// just set the value as-is
-			propSupplier.get().setValue(control(), value);
+			// no observables have been parsed, just use the value
+			prop.setValue(control(), value);
 		}
 
 		return this;

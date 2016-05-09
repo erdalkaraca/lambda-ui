@@ -10,7 +10,9 @@
  *******************************************************************************/
 package de.metadocks.lambdaui.internal.expr;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -21,6 +23,7 @@ public class ExprParser {
 	}
 
 	public static class Element extends Node {
+		public String expr;
 		public String name;
 		public Map<String, Node> children = new LinkedHashMap<>();
 	}
@@ -29,30 +32,72 @@ public class ExprParser {
 		public String value;
 	}
 
-	public static class ParamNode extends Node {
-		public String value;
-	}
-
 	private Stack<Node> stack = new Stack<>();
 	private String expr;
 	private int currentPos;
 
-	public Element parseTree(String expr) {
+	public List<Node> parseTree(String expr) {
 		Assert.isNotNull(expr);
 		Assert.isTrue(!expr.isEmpty());
 
 		this.expr = expr;
 		currentPos = 0;
-		return consumeElement();
+		List<Node> nodes = new ArrayList<>();
+
+		while (currentPos < expr.length()) {
+			boolean isElement = lookAhead("{");
+			Node node;
+
+			if (isElement) {
+				node = consumeElement();
+			} else {
+				node = consumeText();
+			}
+
+			nodes.add(node);
+		}
+
+		return nodes;
+	}
+
+	private TextNode consumeText() {
+		TextNode node = new TextNode();
+		int start = currentPos;
+
+		while (currentPos < expr.length()) {
+			if (lookAhead("{")) {
+				break;
+			} else {
+				currentPos++;
+			}
+		}
+
+		node.value = expr.substring(start, currentPos);
+		return node;
+	}
+
+	private boolean lookAhead(String pattern) {
+		return currentPos + pattern.length() < expr.length()
+				&& pattern.equals(expr.substring(currentPos, currentPos + pattern.length()));
 	}
 
 	private Element consumeElement() {
-		consumeWhitespaces();
+		int start = currentPos;
 		drop("{");
 		consumeWhitespaces();
 		Element node = new Element();
 		stack.push(node);
-		consumeName();
+
+		int posBak = currentPos;
+
+		try {
+			consumeProps();
+		} catch (IllegalArgumentException e) {
+			// revert last try, does not start with props
+			currentPos = posBak;
+			consumeName();
+		}
+
 		consumeWhitespaces();
 
 		try {
@@ -63,8 +108,9 @@ public class ExprParser {
 
 		consumeWhitespaces();
 		drop("}");
-		consumeWhitespaces();
-		return (Element) stack.pop();
+		Element element = (Element) stack.pop();
+		element.expr = expr.substring(start, currentPos);
+		return element;
 	}
 
 	private void consumeWhitespaces() {
@@ -144,5 +190,12 @@ public class ExprParser {
 		}
 
 		currentPos += pattern.length();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(expr);
+		sb.insert(currentPos, '|');
+		return sb.toString();
 	}
 }

@@ -20,7 +20,7 @@ public class Person extends Bean {
 	}
 
 	public void setFirstName(String firstName) {
-		this.firstName = firstName;
+		firePropertyChange("firstName", this.firstName, this.firstName = firstName);
 	}
 
 	public String getLastName() {
@@ -28,7 +28,7 @@ public class Person extends Bean {
 	}
 
 	public void setLastName(String lastName) {
-		this.lastName = lastName;
+		firePropertyChange("lastName", this.lastName, this.lastName = lastName);
 	}
 
 	public Address getAddress() {
