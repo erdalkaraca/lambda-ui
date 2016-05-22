@@ -11,7 +11,12 @@ Require-Bundle: org.eclipse.swt,
  org.eclipse.core.databinding.observable,
  org.eclipse.core.databinding,
  org.eclipse.core.databinding.beans,
- com.ibm.icu
-Export-Package: de.metadocks.lambdaui.swt
+ com.ibm.icu,
+ org.eclipse.emf.ecore,
+ org.eclipse.emf.databinding
+Export-Package: de.metadocks.lambdaui.beans,
+ de.metadocks.lambdaui.swt
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.core.runtime
+Service-Component: OSGI-INF/de.metadocks.lambdaui.internal.binding.BindingFactoryRegistry.xml,
+ OSGI-INF/de.metadocks.lambdaui.internal.binding.BeansObservableFactory.xml

@@ -10,18 +10,13 @@
  *******************************************************************************/
 package de.metadocks.lambdaui.swt;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.eclipse.core.databinding.DataBindingContext;
-import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.core.databinding.observable.value.ComputedValue;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
-import org.eclipse.core.databinding.observable.value.WritableValue;
 import org.eclipse.jface.databinding.swt.DisplayRealm;
 import org.eclipse.jface.databinding.swt.IWidgetValueProperty;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
@@ -35,20 +30,18 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-import de.metadocks.lambdaui.internal.binding.Binding;
-import de.metadocks.lambdaui.internal.expr.ConvertersRegistry;
-import de.metadocks.lambdaui.internal.expr.ExprEvaluator;
-import de.metadocks.lambdaui.internal.expr.ExprParser;
-import de.metadocks.lambdaui.internal.expr.ExprParser.Element;
-import de.metadocks.lambdaui.internal.expr.ExprParser.Node;
-import de.metadocks.lambdaui.internal.expr.ExprParser.TextNode;
+import de.metadocks.lambdaui.internal.binding.BindingFactoryRegistry;
+import de.metadocks.lambdaui.internal.binding.BindingUtil;
 
 public abstract class SwtUI<T extends Control> {
 
 	private static final String PREFIX = SwtUI.class.getName();
 	protected static final String VIEWER = PREFIX + ".viewer";
-	private static final String DATA_CONTEXT = PREFIX + ".dataContext";
+	protected static final String DATA_CONTEXT = PREFIX + ".dataContext";
 	protected static String ID = PREFIX + ".id";
+
+	// TODO make this be provided by user
+	protected static BindingFactoryRegistry bindingFactoryRegistry = BindingFactoryRegistry.getInstance();
 
 	// no need to be thread-safe as UI is always constructed within the UI
 	// thread
@@ -65,7 +58,7 @@ public abstract class SwtUI<T extends Control> {
 		control().setData(key, value);
 	}
 
-	private <P> P findTagged(Class<P> key) {
+	protected <P> P findTagged(Class<P> key) {
 		return findTagged(key, null);
 	}
 
@@ -74,7 +67,7 @@ public abstract class SwtUI<T extends Control> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <P> P findTagged(String key, P defaultValue) {
+	protected <P> P findTagged(String key, P defaultValue) {
 		Control ctx = control();
 
 		do {
@@ -103,82 +96,39 @@ public abstract class SwtUI<T extends Control> {
 	}
 
 	public SwtUI<T> prop(IWidgetValueProperty prop, Object value) {
-		List<Node> nodes = new ExprParser().parseTree((String) value);
-		List<Object> obs = new ArrayList<>();
-		int delay = 0;
-		boolean hasObservables = false;
-
-		for (Node node : nodes) {
-			if (node instanceof Element) {
-				Element element = (Element) node;
-				Binding binding = ExprEvaluator.getInstance().evaluate(element, Binding.class);
-				binding.setExpression(element.expr);
-				delay = Math.max(delay, binding.getDelay());
-				Object dataContext = findTagged(DATA_CONTEXT, null);
-				WritableValue wv = new WritableValue();
-				wv.setValue(dataContext);
-				IObservableValue modelObservableValue = binding.observe(wv);
-				obs.add(modelObservableValue);
-				hasObservables = true;
-			} else if (node instanceof TextNode) {
-				obs.add(((TextNode) node).value);
-			}
-		}
-
-		if (hasObservables) {
-			DataBindingContext dbc = findTagged(DataBindingContext.class);
-			UpdateValueStrategy t2m = new UpdateValueStrategy();
-			UpdateValueStrategy m2t = new UpdateValueStrategy();
-			IObservableValue targetObservable = delay > 0 ? prop.observeDelayed(delay, control())
-					: prop.observe(control());
-			IObservableValue modelObservableValue;
-
-			if (obs.size() == 1) {
-				modelObservableValue = (IObservableValue) obs.get(0);
-			} else {
-				// aggregate to string observable by concatenating all values
-				// the value will be automatically updated once one of the
-				// observables change
-				modelObservableValue = new ComputedValue(String.class) {
-
-					@Override
-					protected Object calculate() {
-						StringBuilder sb = new StringBuilder();
-
-						for (Object object : obs) {
-							if (object instanceof String) {
-								sb.append((String) object);
-							} else if (object instanceof IObservableValue) {
-								Object obValue = ((IObservableValue) object).getValue();
-								obValue = ConvertersRegistry.getInstance().convert(obValue, String.class);
-								sb.append((String) obValue);
-							}
-						}
-
-						return sb.toString();
-					}
-				};
-			}
-
-			dbc.bindValue(targetObservable, modelObservableValue, t2m, m2t);
-
-			// set non editable if this was a multi binding
-			if (obs.size() > 1) {
-				try {
-					WidgetProperties.editable().setValue(control(), false);
-				} catch (Exception e) {
-					// ignore, not a supported editable widget
-				}
-			}
+		if (value instanceof String) {
+			bind(prop, (String) value);
 		} else {
-			// no observables have been parsed, just use the value
+			// no binding expression
 			prop.setValue(control(), value);
 		}
 
 		return this;
 	}
 
-	public SwtUI<T> bindingMaster(Object dataContext) {
+	private void bind(IWidgetValueProperty prop, String expr) {
+		Object dataContext = findTagged(DATA_CONTEXT, null);
+		DataBindingContext dbc = findTagged(DataBindingContext.class);
+		org.eclipse.core.databinding.Binding binding = bindingFactoryRegistry.bind(dbc, dataContext, expr, delay -> {
+			return delay > 0 ? prop.observeDelayed(delay, control()) : prop.observe(control());
+		});
+
+		if (binding == null) {
+			// no observables have been parsed, just use the value
+			prop.setValue(control(), expr);
+		} else {
+			// set non editable if this was a multi binding
+			if (binding.getModel() instanceof ComputedValue) {
+				try {
+					WidgetProperties.editable().setValue(control(), false);
+				} catch (Exception e) {
+					// ignore, not a supported editable widget
+				}
+			}
+		}
+	}
+
+	public SwtUI<T> dataContext(Object dataContext) {
 		tag(DATA_CONTEXT, dataContext);
 		return this;
 	}

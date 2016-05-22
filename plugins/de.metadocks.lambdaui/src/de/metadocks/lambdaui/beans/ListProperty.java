@@ -8,34 +8,23 @@
  * Contributors:
  *     Erdal Karaca - initial API and implementation
  *******************************************************************************/
-package de.metadocks.lambdaui.snippets.model;
+package de.metadocks.lambdaui.beans;
 
-public class Address extends Bean {
-	private String street;
-	private int number;
-	private String zipCode;
+import java.util.List;
 
-	public String getStreet() {
-		return street;
+import org.eclipse.core.databinding.observable.list.IObservableList;
+import org.eclipse.core.databinding.observable.list.WritableList;
+
+public class ListProperty<T> extends Property {
+
+	private IObservableList list = new WritableList();
+
+	public ListProperty(String name, Bean bean) {
+		super(name, bean);
 	}
 
-	public void setStreet(String street) {
-		this.street = street;
-	}
-
-	public int getNumber() {
-		return number;
-	}
-
-	public void setNumber(int number) {
-		this.number = number;
-	}
-
-	public String getZipCode() {
-		return zipCode;
-	}
-
-	public void setZipCode(String zipCode) {
-		this.zipCode = zipCode;
+	@SuppressWarnings("unchecked")
+	public List<T> getValue() {
+		return list;
 	}
 }

@@ -10,11 +10,7 @@
  *******************************************************************************/
 package de.metadocks.lambdaui.internal.binding;
 
-import org.eclipse.core.databinding.beans.BeanProperties;
-import org.eclipse.core.databinding.beans.IBeanValueProperty;
 import org.eclipse.core.databinding.conversion.IConverter;
-import org.eclipse.core.databinding.observable.masterdetail.MasterDetailObservables;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
 
 public class Binding {
 	public static enum Mode {
@@ -29,6 +25,7 @@ public class Binding {
 	private IConverter converter;
 	private Mode mode;
 	private int delay = 0;
+	private String expr;
 
 	public String getPath() {
 		return path;
@@ -62,19 +59,12 @@ public class Binding {
 		this.delay = delay;
 	}
 
-	public IObservableValue observe(Object dataContext) {
-		if (dataContext instanceof IObservableValue) {
-			IObservableValue detailValue = MasterDetailObservables.detailValue((IObservableValue) dataContext,
-					target -> observe(target), null);
-			return detailValue;
-		}
-
-		IBeanValueProperty value = BeanProperties.value(dataContext.getClass(), path);
-		IObservableValue observableValue = value.observe(dataContext);
-		return observableValue;
+	public void setExpression(String expr) {
+		this.expr = expr;
 	}
 
-	public void setExpression(String expr) {
-
+	@Override
+	public String toString() {
+		return expr != null ? expr : super.toString();
 	}
 }

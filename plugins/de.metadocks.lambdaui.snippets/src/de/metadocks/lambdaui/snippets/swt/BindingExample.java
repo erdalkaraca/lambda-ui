@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import de.metadocks.lambdaui.snippets.model.Person;
+import de.metadocks.lambdaui.company.Person;
 import de.metadocks.lambdaui.swt.SwtUI;
 
 public class BindingExample {
@@ -25,7 +25,7 @@ public class BindingExample {
 		Person person = new Person();
 		person.setFirstName("John");
 		person.setLastName("Doe");
-		root.bindingMaster(person);
+		root.dataContext(person);
 
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
 				.child(() -> SwtUI.create(Label::new)//

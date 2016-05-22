@@ -13,13 +13,22 @@ package de.metadocks.lambdaui.swt;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.jface.databinding.viewers.IViewerValueProperty;
+import org.eclipse.jface.databinding.viewers.ViewerProperties;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import de.metadocks.lambdaui.internal.binding.BindingUtil;
+
 public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 	private V viewer;
+
+	public V viewer() {
+		return viewer;
+	}
 
 	@Override
 	public ViewerUI<V> id(String id) {
@@ -72,5 +81,33 @@ public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 		};
 		builder.viewer = viewer;
 		return builder;
+	}
+
+	public ViewerUI<V> prop(IViewerValueProperty prop, Object value) {
+		if (value instanceof String) {
+			bind(prop, (String) value);
+		} else {
+			// no binding expression
+			prop.setValue(control(), value);
+		}
+
+		return this;
+	}
+
+	public ViewerUI<V> input(Object value) {
+		return prop(ViewerProperties.input(), value);
+	}
+
+	private void bind(IViewerValueProperty prop, String expr) {
+		Object dataContext = findTagged(DATA_CONTEXT, null);
+		DataBindingContext dbc = findTagged(DataBindingContext.class);
+		org.eclipse.core.databinding.Binding binding = bindingFactoryRegistry.bind(dbc, dataContext, expr, delay -> {
+			return prop.observe(viewer);
+		});
+
+		if (binding == null) {
+			// no observables have been parsed, just use the value
+			prop.setValue(control(), expr);
+		}
 	}
 }

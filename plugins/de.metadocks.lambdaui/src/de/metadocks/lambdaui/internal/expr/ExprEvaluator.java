@@ -17,6 +17,7 @@ import java.util.Map.Entry;
 import org.eclipse.core.databinding.beans.BeanProperties;
 import org.eclipse.core.databinding.beans.IBeanValueProperty;
 
+import de.metadocks.lambdaui.conversion.ConvertersRegistry;
 import de.metadocks.lambdaui.internal.binding.Binding;
 import de.metadocks.lambdaui.internal.expr.ExprParser.Element;
 import de.metadocks.lambdaui.internal.expr.ExprParser.Node;
