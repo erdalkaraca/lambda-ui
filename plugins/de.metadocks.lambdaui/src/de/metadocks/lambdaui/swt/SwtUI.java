@@ -14,10 +14,10 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.Realm;
 import org.eclipse.core.databinding.observable.value.ComputedValue;
 import org.eclipse.jface.databinding.swt.DisplayRealm;
+import org.eclipse.jface.databinding.swt.ISWTObservableValue;
 import org.eclipse.jface.databinding.swt.IWidgetValueProperty;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.viewers.Viewer;
@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-import de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry;
+import de.metadocks.xprbinds.internal.binding.Binder;
 
 public abstract class SwtUI<T extends Control> {
 
@@ -38,9 +38,6 @@ public abstract class SwtUI<T extends Control> {
 	protected static final String VIEWER = PREFIX + ".viewer";
 	protected static final String DATA_CONTEXT = PREFIX + ".dataContext";
 	protected static String ID = PREFIX + ".id";
-
-	// TODO make this be provided by user
-	protected static BindingFactoryRegistry bindingFactoryRegistry = BindingFactoryRegistry.getInstance();
 
 	// no need to be thread-safe as UI is always constructed within the UI
 	// thread
@@ -107,10 +104,12 @@ public abstract class SwtUI<T extends Control> {
 
 	private void bind(IWidgetValueProperty prop, String expr) {
 		Object dataContext = findTagged(DATA_CONTEXT, null);
-		DataBindingContext dbc = findTagged(DataBindingContext.class);
-		org.eclipse.core.databinding.Binding binding = bindingFactoryRegistry.bind(dbc, dataContext, expr, delay -> {
-			return delay > 0 ? prop.observeDelayed(delay, control()) : prop.observe(control());
+		Binder dbc = findTagged(Binder.class);
+		control().addDisposeListener(evt -> {
+			dbc.dispose();
 		});
+		ISWTObservableValue observableValue = prop.observe(control());
+		org.eclipse.core.databinding.Binding binding = dbc.bind(observableValue, dataContext, expr);
 
 		if (binding == null) {
 			// no observables have been parsed, just use the value
@@ -294,7 +293,10 @@ public abstract class SwtUI<T extends Control> {
 				return control;
 			}
 		};
-		builder.findTagged(DataBindingContext.class, new DataBindingContext());
+
+		// TODO get ObservableFactoriesRegistry from OSGi
+		Binder bindingContext = Binder.create(null);
+		builder.findTagged(Binder.class, bindingContext);
 		return builder;
 	}
 

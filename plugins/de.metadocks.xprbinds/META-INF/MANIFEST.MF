@@ -7,8 +7,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: de.metadocks.xprbinds.beans,
  de.metadocks.xprbinds.internal.binding,
  de.metadocks.xprbinds.internal.expr
-Service-Component: OSGI-INF/de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry.xml,
- OSGI-INF/de.metadocks.xprbinds.internal.binding.BeansObservableFactory.xml
+Service-Component: OSGI-INF/de.metadocks.xprbinds.internal.binding.BeansObservableFactory.xml,
+ OSGI-INF/de.metadocks.xprbinds.internal.binding.ObservableFactoriesRegistry.xml
 Require-Bundle: org.eclipse.core.databinding.observable,
  org.eclipse.core.databinding,
  org.eclipse.core.databinding.beans,

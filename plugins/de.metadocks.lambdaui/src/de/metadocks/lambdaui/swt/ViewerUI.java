@@ -13,13 +13,15 @@ package de.metadocks.lambdaui.swt;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.jface.databinding.viewers.IViewerObservableValue;
 import org.eclipse.jface.databinding.viewers.IViewerValueProperty;
 import org.eclipse.jface.databinding.viewers.ViewerProperties;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+
+import de.metadocks.xprbinds.internal.binding.Binder;
 
 public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 	private V viewer;
@@ -98,14 +100,13 @@ public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 
 	private void bind(IViewerValueProperty prop, String expr) {
 		Object dataContext = findTagged(DATA_CONTEXT, null);
-		DataBindingContext dbc = findTagged(DataBindingContext.class);
-		org.eclipse.core.databinding.Binding binding = bindingFactoryRegistry.bind(dbc, dataContext, expr, delay -> {
-			return prop.observe(viewer);
-		});
+		Binder dbc = findTagged(Binder.class);
+		IViewerObservableValue observeValue = prop.observe(viewer);
+		org.eclipse.core.databinding.Binding binding = dbc.bind(observeValue, dataContext, expr);
 
 		if (binding == null) {
 			// no observables have been parsed, just use the value
-			prop.setValue(control(), expr);
+			prop.setValue(viewer, expr);
 		}
 	}
 }

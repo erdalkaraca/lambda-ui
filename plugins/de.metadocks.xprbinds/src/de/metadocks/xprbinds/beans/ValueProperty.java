@@ -19,10 +19,10 @@ public class ValueProperty<T> extends Property {
 		super(name, bean);
 	}
 
-	public void setValue(T value) {
-		T oldValue = value;
-		this.value = value;
-		getBean().firePropertyChange(getName(), oldValue, value);
+	public void setValue(T newValue) {
+		T oldValue = this.value;
+		this.value = newValue;
+		getBean().firePropertyChange(getName(), oldValue, newValue);
 	}
 
 	public T getValue() {
