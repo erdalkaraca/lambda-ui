@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" name="de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry">
+   <service>
+      <provide interface="de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry"/>
+   </service>
+   <reference bind="addFactory" cardinality="1..1" interface="de.metadocks.xprbinds.internal.binding.ObservableFactory" name="Factory" policy="static" unbind="removeFactory"/>
+   <implementation class="de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry"/>
+</scr:component>

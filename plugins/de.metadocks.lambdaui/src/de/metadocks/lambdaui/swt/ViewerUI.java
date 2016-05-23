@@ -21,8 +21,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import de.metadocks.lambdaui.internal.binding.BindingUtil;
-
 public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 	private V viewer;
 
@@ -34,7 +32,7 @@ public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 	public ViewerUI<V> id(String id) {
 		Control control = control();
 		SwtUI.wrap(control).id(id);
-		control.setData("viewer", viewer);
+		control.setData(VIEWER, viewer);
 		return this;
 	}
 

@@ -30,8 +30,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-import de.metadocks.lambdaui.internal.binding.BindingFactoryRegistry;
-import de.metadocks.lambdaui.internal.binding.BindingUtil;
+import de.metadocks.xprbinds.internal.binding.BindingFactoryRegistry;
 
 public abstract class SwtUI<T extends Control> {
 
@@ -84,11 +83,11 @@ public abstract class SwtUI<T extends Control> {
 	}
 
 	public SwtUI<T> text(String text) {
-		return prop(() -> WidgetProperties.text(), text);
+		return prop(WidgetProperties.text(), text);
 	}
 
 	public SwtUI<T> text(int event, String text) {
-		return prop(() -> WidgetProperties.text(event), text);
+		return prop(WidgetProperties.text(event), text);
 	}
 
 	public SwtUI<T> prop(Supplier<IWidgetValueProperty> propSupplier, Object value) {
@@ -160,26 +159,17 @@ public abstract class SwtUI<T extends Control> {
 		return this;
 	}
 
-	// public SwtUI<T> observeText(int event, Consumer<IObservableValue>
-	// obsConsumer) {
-	// IWidgetValueProperty prop = WidgetProperties.text(event);
-	// return observeValue(() -> prop, obsConsumer);
-	// }
-	//
-	// public SwtUI<T> observeValue(Supplier<IWidgetValueProperty> propSupplier,
-	// Consumer<IObservableValue> obsConsumer) {
-	// IWidgetValueProperty prop = propSupplier.get();
-	// ISWTObservableValue observe = prop.observe(control());
-	// obsConsumer.accept(observe);
-	// return this;
-	// }
+	public SwtUI<T> customizeUI(Consumer<SwtUI<T>> consumer) {
+		consumer.accept(this);
+		return this;
+	}
 
 	public SwtUI<T> on(int swtEvent, Listener listener) {
 		control().addListener(swtEvent, listener);
 		return this;
 	}
 
-	public <C extends Control> SwtUI<T> withChild(String id, Consumer<C> consumer) {
+	public <C extends Control> SwtUI<T> withControl(String id, Consumer<C> consumer) {
 		C found = find(id, control());
 
 		if (found == null) {
@@ -187,6 +177,12 @@ public abstract class SwtUI<T extends Control> {
 		}
 
 		syncExec(() -> consumer.accept(found));
+		return this;
+	}
+
+	public <V extends Viewer> SwtUI<T> withViewerUI(String id, Consumer<ViewerUI<V>> consumer) {
+		V viewer = findViewer(id);
+		consumer.accept(ViewerUI.wrapViewer(viewer));
 		return this;
 	}
 
@@ -260,7 +256,7 @@ public abstract class SwtUI<T extends Control> {
 			return (V) found.getData(VIEWER);
 		}
 
-		return null;
+		throw new IllegalArgumentException("Viewer not found:" + id);
 	}
 
 	public static <T extends Control> SwtUI<T> create(BiFunction<Composite, Integer, T> ctor) {
