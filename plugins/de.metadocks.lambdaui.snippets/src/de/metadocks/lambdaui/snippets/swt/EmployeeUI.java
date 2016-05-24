@@ -25,20 +25,20 @@ public class EmployeeUI {
 		root.dataContext(input);
 
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
-				.child(() -> SwtUI.create(Label::new)
+				.childControl(() -> SwtUI.create(Label::new)
 						.text("Employee: {path=firstName} {path=lastName} (born {path=birthdate})").layoutData(
 								GridDataFactory.createFrom(new GridData(GridData.FILL_HORIZONTAL)).span(2, 1).create()))//
-				.child(() -> SwtUI.create(Label::new).text("First Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=firstName,delay=200}")
+				.childControl(() -> SwtUI.create(Label::new).text("First Name"))//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=firstName,delay=200}")
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
-				.child(() -> SwtUI.create(Label::new).text("Last Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=lastName,delay=200}")
+				.childControl(() -> SwtUI.create(Label::new).text("Last Name"))//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=lastName,delay=200}")
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
-				.child(() -> SwtUI.create(Label::new).text("ID"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=id,delay=200}")
+				.childControl(() -> SwtUI.create(Label::new).text("ID"))//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=id,delay=200}")
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
-				.child(() -> SwtUI.create(Label::new).text("Birth Date"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=birthdate,delay=200}")
+				.childControl(() -> SwtUI.create(Label::new).text("Birth Date"))//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER).text(SWT.Modify, "{path=birthdate,delay=200}")
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
 		;
 	}

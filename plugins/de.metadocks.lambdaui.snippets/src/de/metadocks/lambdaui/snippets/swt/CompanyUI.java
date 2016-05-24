@@ -30,13 +30,13 @@ public class CompanyUI {
 		root.dataContext(companyMaster);
 
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
-				.child(() -> SwtUI.create(Label::new).text("Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER).text("{path=name}")
+				.childControl(() -> SwtUI.create(Label::new).text("Name"))//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER).text("{path=name}")
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
-				.child(() -> SwtUI.create(Label::new).text("Employees")
+				.childControl(() -> SwtUI.create(Label::new).text("Employees")
 						.layoutData(GridDataFactory.swtDefaults().span(2, 1).grab(true, false)
 								.align(SWT.FILL, SWT.CENTER).create()))//
-				.child(() -> ViewerUI.createViewer(TableViewer::new, SWT.BORDER)//
+				.childControl(() -> ViewerUI.createViewer(TableViewer::new, SWT.BORDER)//
 						.customizeViewer(this::customizeEmployees)//
 						.id(EMPLOYEES_VIEWER)//
 						.input("{path=employees}")//

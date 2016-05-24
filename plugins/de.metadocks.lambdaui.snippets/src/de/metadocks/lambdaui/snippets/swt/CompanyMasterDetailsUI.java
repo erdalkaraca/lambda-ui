@@ -15,9 +15,9 @@ public class CompanyMasterDetailsUI {
 	private EmployeeUI employeeUI;
 
 	public void createUI(SwtUI<? extends Composite> root) {
-		root.child(() -> SwtUI.create(SashForm::new)//
-				.child(() -> SwtUI.create(Composite::new).customizeUI(this::createMasterUI))//
-				.child(() -> SwtUI.create(Composite::new).customizeUI(this::createDetailsUI))//
+		root.childControl(() -> SwtUI.create(SashForm::new)//
+				.childControl(() -> SwtUI.create(Composite::new).customizeUI(this::createMasterUI))//
+				.childControl(() -> SwtUI.create(Composite::new).customizeUI(this::createDetailsUI))//
 				.customize(sash -> {
 					sash.setWeights(new int[] { 40, 60 });
 				}));

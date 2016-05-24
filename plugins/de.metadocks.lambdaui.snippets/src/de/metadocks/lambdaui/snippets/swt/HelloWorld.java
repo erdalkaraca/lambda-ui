@@ -73,16 +73,16 @@ public class HelloWorld {
 	public void createUI(Composite parent) {
 		root = SwtUI.wrap(parent);
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(3).create())//
-				.child(() -> SwtUI.create(Label::new)//
+				.childControl(() -> SwtUI.create(Label::new)//
 						.text("Selection"))//
-				.child(() -> ViewerUI.createViewer(ComboViewer::new, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY)//
+				.childControl(() -> ViewerUI.createViewer(ComboViewer::new, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY)//
 						.id("selectionCombo")//
 						.customizeViewer(this::customizeComboViewer)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL)))//
-				.child(() -> SwtUI.create(Button::new)//
+				.childControl(() -> SwtUI.create(Button::new)//
 						.text("Apply")//
 						.on(SWT.Selection, this::onButtonClick))//
-				.child(() -> SwtUI.create(Text::new, SWT.READ_ONLY | SWT.BORDER)//
+				.childControl(() -> SwtUI.create(Text::new, SWT.READ_ONLY | SWT.BORDER)//
 						.id("textField")//
 						.layoutData(GridDataFactory.swtDefaults().span(3, 1).grab(true, true).align(SWT.FILL, SWT.FILL)
 								.create()));

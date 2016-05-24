@@ -105,9 +105,6 @@ public abstract class SwtUI<T extends Control> {
 	private void bind(IWidgetValueProperty prop, String expr) {
 		Object dataContext = findTagged(DATA_CONTEXT, null);
 		Binder dbc = findTagged(Binder.class);
-		control().addDisposeListener(evt -> {
-			dbc.dispose();
-		});
 		ISWTObservableValue observableValue = prop.observe(control());
 		org.eclipse.core.databinding.Binding binding = dbc.bind(observableValue, dataContext, expr);
 
@@ -141,15 +138,15 @@ public abstract class SwtUI<T extends Control> {
 		return this;
 	}
 
-	public SwtUI<T> child(ControlSupplier supplier) {
+	public SwtUI<T> childControl(Supplier<SwtUI<? extends Control>> supplier) {
 		currentParent = control();
-		supplier.getControlUI();
+		supplier.get();
 		return this;
 	}
 
-	public <C extends Viewer> SwtUI<T> child(ViewerSupplier supplier) {
+	public <C extends Viewer> SwtUI<T> childViewer(Supplier<ViewerUI<? extends Viewer>> supplier) {
 		currentParent = control();
-		supplier.getViewerUI();
+		supplier.get();
 		return this;
 	}
 
@@ -297,15 +294,10 @@ public abstract class SwtUI<T extends Control> {
 		// TODO get ObservableFactoriesRegistry from OSGi
 		Binder bindingContext = Binder.create(null);
 		builder.findTagged(Binder.class, bindingContext);
+		control.addDisposeListener(evt -> {
+			bindingContext.dispose();
+		});
 		return builder;
-	}
-
-	public static interface ViewerSupplier {
-		ViewerUI<? extends Viewer> getViewerUI();
-	}
-
-	public static interface ControlSupplier {
-		SwtUI<? extends Control> getControlUI();
 	}
 
 	public static void openInShell(Consumer<SwtUI<Shell>> uiConsumer) {

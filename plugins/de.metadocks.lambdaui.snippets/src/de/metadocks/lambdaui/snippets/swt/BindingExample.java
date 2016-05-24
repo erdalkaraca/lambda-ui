@@ -28,19 +28,19 @@ public class BindingExample {
 		root.dataContext(person);
 
 		root.layout(GridLayoutFactory.swtDefaults().numColumns(2).create())//
-				.child(() -> SwtUI.create(Label::new)//
+				.childControl(() -> SwtUI.create(Label::new)//
 						.text("First Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
 						.text(SWT.Modify, "{Binding path=firstName, delay=200}"))//
-				.child(() -> SwtUI.create(Label::new)//
+				.childControl(() -> SwtUI.create(Label::new)//
 						.text("Last Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
 						.text(SWT.Modify, "{path=lastName, delay=200}"))//
-				.child(() -> SwtUI.create(Label::new)//
+				.childControl(() -> SwtUI.create(Label::new)//
 						.text("Complete Name"))//
-				.child(() -> SwtUI.create(Text::new, SWT.BORDER)//
+				.childControl(() -> SwtUI.create(Text::new, SWT.BORDER)//
 						.layoutData(new GridData(GridData.FILL_HORIZONTAL))//
 						.text("Name: {path=firstName} {path=lastName}")//
 		);
