@@ -8,36 +8,37 @@
  * Contributors:
  *     Erdal Karaca - initial API and implementation
  *******************************************************************************/
-package de.metadocks.xprbinds.tests;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
+package de.metadocks.lambdaui.company;
 
 import de.metadocks.beans.Bean;
 import de.metadocks.beans.ValueProperty;
 
-public class BeanTest {
-	static class Car extends Bean {
+public class Address extends Bean {
+	private ValueProperty<String> street;
+	private ValueProperty<Integer> number;
+	private ValueProperty<String> zipCode;
 
-		private ValueProperty<Integer> numberOfWheels;
-
-		public void setNumberOfWheels(Integer i) {
-			numberOfWheels.setValue(i);
-		}
-
-		public Integer getNumberOfWheels() {
-			return numberOfWheels.getValue();
-		}
+	public String getStreet() {
+		return street.getValue();
 	}
 
-	@Test
-	public void testProperties() {
-		Car car = new Car();
-		assertEquals(null, car.getNumberOfWheels());
+	public void setStreet(String street) {
+		this.street.setValue(street);
+	}
 
-		car.setNumberOfWheels(4);
-		int numberOfWheels = car.getNumberOfWheels();
-		System.out.println(numberOfWheels);
+	public int getNumber() {
+		return number.getValue(0);
+	}
+
+	public void setNumber(int number) {
+		this.number.setValue(number);
+	}
+
+	public String getZipCode() {
+		return zipCode.getValue();
+	}
+
+	public void setZipCode(String zipCode) {
+		this.zipCode.setValue(zipCode);
 	}
 }

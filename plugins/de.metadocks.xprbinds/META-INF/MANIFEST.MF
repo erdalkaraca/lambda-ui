@@ -4,15 +4,14 @@ Bundle-Name: Expressive Bindings Core
 Bundle-SymbolicName: de.metadocks.xprbinds
 Bundle-Version: 0.9.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: de.metadocks.xprbinds.beans,
- de.metadocks.xprbinds.internal.binding,
+Export-Package: de.metadocks.xprbinds.binding,
  de.metadocks.xprbinds.internal.expr
-Service-Component: OSGI-INF/de.metadocks.xprbinds.internal.binding.BeansObservableFactory.xml,
- OSGI-INF/de.metadocks.xprbinds.internal.binding.ObservableFactoriesRegistry.xml
+Service-Component: OSGI-INF/de.metadocks.xprbinds.binding.internal.ObservableFactoriesRegistry.xml,
+ OSGI-INF/de.metadocks.xprbinds.binding.internal.BeansObservableFactory.xml
 Require-Bundle: org.eclipse.core.databinding.observable,
  org.eclipse.core.databinding,
  org.eclipse.core.databinding.beans,
- org.eclipse.core.databinding.property,
- org.eclipse.emf.ecore,
- org.eclipse.emf.databinding
+ org.eclipse.core.databinding.property
 Import-Package: org.eclipse.core.runtime
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: Erdal Karaca

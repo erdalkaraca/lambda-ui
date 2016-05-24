@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-import de.metadocks.xprbinds.internal.binding.Binder;
+import de.metadocks.xprbinds.binding.Binder;
 
 public abstract class SwtUI<T extends Control> {
 

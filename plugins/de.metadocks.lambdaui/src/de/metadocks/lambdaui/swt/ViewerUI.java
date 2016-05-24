@@ -21,7 +21,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import de.metadocks.xprbinds.internal.binding.Binder;
+import de.metadocks.xprbinds.binding.Binder;
 
 public abstract class ViewerUI<V extends Viewer> extends SwtUI<Control> {
 	private V viewer;

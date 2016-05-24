@@ -17,8 +17,8 @@ import java.util.Map.Entry;
 import org.eclipse.core.databinding.beans.BeanProperties;
 import org.eclipse.core.databinding.beans.IBeanValueProperty;
 
+import de.metadocks.xprbinds.binding.internal.Binding;
 import de.metadocks.xprbinds.conversion.ConvertersRegistry;
-import de.metadocks.xprbinds.internal.binding.Binding;
 import de.metadocks.xprbinds.internal.expr.ExprParser.Element;
 import de.metadocks.xprbinds.internal.expr.ExprParser.Node;
 import de.metadocks.xprbinds.internal.expr.ExprParser.TextNode;
@@ -27,10 +27,6 @@ public class ExprEvaluator {
 	private static final ExprEvaluator INSTANCE = new ExprEvaluator();
 
 	private Map<String, Class<?>> typesLookup = new HashMap<>();
-
-	public ExprEvaluator() {
-		typesLookup.put(Binding.class.getSimpleName(), Binding.class);
-	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T evaluate(Node node, Class<T> elementType) {
@@ -74,5 +70,9 @@ public class ExprEvaluator {
 
 	public static ExprEvaluator getInstance() {
 		return INSTANCE;
+	}
+
+	public void registerTypeAlias(String aliasName, Class<Binding> type) {
+		typesLookup.put(aliasName, type);
 	}
 }
